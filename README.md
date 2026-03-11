@@ -6,25 +6,24 @@ An image classification project that uses Convolutional Neural Networks (CNN) to
 
 ## 📋 Project Overview
 
-This project implements a deep learning model to classify currency notes from images using TensorFlow/Keras. The model is trained on a custom dataset and can predict the denomination of currency notes with confidence scores.
+This project implements a deep learning model to classify currency notes from images using TensorFlow/Keras. The model is trained on a custom dataset split into train, validation, and test sets (70/15/15), and can predict the denomination of currency notes with confidence scores.
 
 ---
 
 ## ✨ Features
 
+- **Automated Dataset Splitting**: Randomly splits dataset into 70% train, 15% validation, 15% test
 - **Image Classification**: Automatically identifies different currency note denominations
-- **Data Augmentation**: Training-only augmentation (rotation, shift, shear, zoom, horizontal flip) — no augmentation leak on validation/test data
-- **Separate Train / Val / Test Splits**: Clean evaluation using a dedicated test generator with no shuffling
-- **Regularization**: BatchNormalization after each Conv block and Dropout to combat overfitting
-- **Smart Training Callbacks**:
-  - `EarlyStopping` — restores best weights and stops when val_accuracy plateaus
-  - `ReduceLROnPlateau` — halves the learning rate when val_loss stagnates
-- **Visual Analysis**: 
+- **Visual Analysis**:
+  - Sample image grid from the training set
   - Training/Validation accuracy and loss graphs
-  - Confusion matrix visualization
+  - Confusion matrix heatmap
+  - Classification report (precision, recall, F1-score)
   - Sample predictions with colour-coded correct/incorrect labels
-- **Interactive Prediction**: Upload custom images to get real-time predictions
-- **Top-3 Predictions**: Shows the top 3 most likely classes with confidence percentages
+  - Prediction distribution histogram on test data
+  - Bar chart of test accuracy vs. loss
+- **Interactive Prediction**: Upload custom images to get real-time predictions with top-3 confidence scores
+- **Model Persistence**: Saves the trained model to Google Drive
 
 ---
 
@@ -36,6 +35,7 @@ The dataset contains images of different currency note denominations organized i
 [Download from Google Drive](https://drive.google.com/file/d/1GeD_AvjWY-n2F1PU-DkUakdeHr9dmsTW/view?usp=drive_link)
 
 **Dataset Structure:**
+
 ```
 Dataset/
 ├── Class_1/
@@ -57,6 +57,7 @@ Dataset/
 This project is designed to run on **Google Colab** with GPU acceleration.
 
 Required libraries:
+
 - TensorFlow/Keras
 - NumPy
 - Matplotlib
@@ -66,17 +67,17 @@ Required libraries:
 ### Installation & Setup
 
 1. **Open Google Colab**
-   - Go to [Google Colab](https://colab.research.google.com/)
-   - Upload the notebook file
+   - Click the **Open in Colab** badge at the top of the notebook, or go to [Google Colab](https://colab.research.google.com/) and upload the notebook file
 
 2. **Upload Dataset to Google Drive**
    - Download the dataset from the link above
-   - Upload `Dataset.zip` to your Google Drive (`MyDrive/`)
+   - Upload `Dataset.zip` to the root of your Google Drive (`MyDrive/`)
 
 3. **Run the Notebook**
    - Execute cells sequentially
-   - The first cell will mount your Google Drive
-   - The second cell will extract the dataset
+   - Cell 1 mounts Google Drive
+   - Cell 2 extracts the dataset
+   - Cell 3 runs the full training, evaluation, and saving pipeline
 
 ---
 
@@ -84,35 +85,25 @@ Required libraries:
 
 ```
 Sequential CNN Model:
+├── Conv2D (32 filters, 3x3, ReLU)  — input: 128×128×3
+├── MaxPooling2D (2x2)
 ├── Conv2D (64 filters, 3x3, ReLU)
-├── BatchNormalization
 ├── MaxPooling2D (2x2)
 ├── Conv2D (128 filters, 3x3, ReLU)
-├── BatchNormalization
-├── MaxPooling2D (2x2)
-├── Conv2D (256 filters, 3x3, ReLU)
-├── BatchNormalization
 ├── MaxPooling2D (2x2)
 ├── Flatten
-├── Dense (256 units, ReLU)
-├── Dropout (0.4)
+├── Dense (128 units, ReLU)
+├── Dropout (0.5)
 └── Dense (num_classes, Softmax)
 ```
 
 **Hyperparameters:**
-- Image Size: 128x128
-- Batch Size: 32
-- Epochs: up to 30 (EarlyStopping with patience=5)
-- Optimizer: Adam (with ReduceLROnPlateau, factor=0.5, patience=3)
-- Loss: Categorical Crossentropy
 
-**Data Augmentation (training only):**
-- Rotation range: 20°
-- Width / Height shift: 0.2
-- Shear range: 0.2
-- Zoom range: 0.2
-- Horizontal flip: enabled
-- Fill mode: nearest
+- Image Size: 128×128
+- Batch Size: 32
+- Epochs: 40
+- Optimizer: Adam
+- Loss: Categorical Crossentropy
 
 ---
 
@@ -120,46 +111,46 @@ Sequential CNN Model:
 
 ### Training the Model
 
-1. Mount Google Drive (Cell 2)
-2. Extract the dataset (Cell 4):
-   - Unzips `Dataset.zip` from Google Drive to `/content/`
-3. Run the main training cell (Cell 5):
-   - Creates separate train, validation, and test generators
-   - Applies augmentation **only** to training data
-   - Builds the improved 3-block CNN with BatchNorm and Dropout
-   - Trains for up to 30 epochs with `EarlyStopping` and `ReduceLROnPlateau`
-   - Evaluates on the clean test set
-   - Displays accuracy/loss curves, confusion matrix, and sample predictions
-   - Saves model as `money_model_v2.h5` to Google Drive
+1. Mount Google Drive and extract dataset (Cells 1–2)
+2. Run the main training cell (Cell 3):
+   - Splits dataset 70/15/15 (train/validation/test)
+   - Loads and normalises images with `ImageDataGenerator`
+   - Builds and trains the CNN model for 40 epochs
+   - Evaluates on the test set
+   - Generates confusion matrix and classification report
+   - Visualises 8 sample predictions (green = correct, red = incorrect)
+   - Saves model as `money_model_v3.h5` to Google Drive
 
 ### Making Predictions
 
-Run Cell 7 to:
-- Upload an image of a currency note
-- Get top-3 predictions with confidence scores and a bar chart
-- View visualization of the uploaded image alongside prediction probabilities
+- **Cell 4** – Download the saved model from Google Drive
+- **Cell 5** – Upload any currency note image to get top-3 predictions with confidence percentages and a bar chart
+- **Cell 6** – View test accuracy and loss as a bar chart
+- **Cell 7** – View the prediction distribution histogram across all classes
 
 ---
 
 ## 📈 Model Performance
 
 The model provides:
-- **Accuracy/Loss Graphs**: Monitor training and validation metrics
-- **Confusion Matrix**: Visualize classification performance
-- **Classification Report**: Precision, recall, and F1-score for each class
-- **Sample Predictions**: Visual comparison of predicted vs true labels
+
+- **Accuracy/Loss Graphs**: Monitor training and validation metrics over 40 epochs
+- **Confusion Matrix**: Heatmap of true vs. predicted labels on the test set
+- **Classification Report**: Per-class precision, recall, and F1-score
+- **Sample Predictions**: 8 images colour-coded green (correct) or red (incorrect)
+- **Prediction Distribution**: Histogram showing how predictions are spread across classes
 
 ---
 
 ## 🛠️ Technologies Used
 
 - **Python 3.x**
-- **TensorFlow/Keras** - Deep learning framework
-- **NumPy** - Numerical computing
-- **Matplotlib** - Data visualization
-- **Seaborn** - Statistical visualizations
-- **Scikit-learn** - Metrics and evaluation
-- **Google Colab** - Development environment
+- **TensorFlow/Keras** — Deep learning framework
+- **NumPy** — Numerical computing
+- **Matplotlib** — Data visualization
+- **Seaborn** — Statistical visualizations
+- **Scikit-learn** — Metrics and evaluation
+- **Google Colab** — Development environment
 
 ---
 
@@ -167,21 +158,27 @@ The model provides:
 
 ```
 ACNR (Automated Currency Note Recognition)/
-├── ACNR (Automated Currency Note Recognition).ipynb
+├── ACNR_(Automated_Currency_Note_Recognition) v3.ipynb
 ├── README.md
 └── Dataset/ (extracted from Drive)
+    ├── dataset/         ← original class folders
+    └── dataset_split/   ← auto-generated train/validation/test split
+        ├── train/
+        ├── validation/
+        └── test/
 ```
 
 ---
 
 ## 🔮 Future Improvements
 
-- [x] Implement data augmentation (rotation, zoom, flip)
-- [x] Add BatchNormalization and Dropout layers
-- [x] Increase model depth (more Conv blocks)
-- [x] Use learning rate scheduling (ReduceLROnPlateau)
-- [x] Train for more epochs (up to 30 with EarlyStopping)
-- [ ] Implement transfer learning (VGG16, ResNet, etc.)
+- [x] Add Dropout layer for regularization
+- [x] Increase model depth (3 Conv blocks)
+- [x] Train for more epochs (40)
+- [x] Structured 70/15/15 dataset split
+- [ ] Implement data augmentation (rotation, zoom, flip)
+- [ ] Use learning rate scheduling / early stopping
+- [ ] Implement transfer learning (VGG16, ResNet, MobileNet, etc.)
 - [ ] Create standalone Python scripts for deployment
 - [ ] Add real-time camera detection
 - [ ] Export model to TensorFlow Lite for mobile deployment
@@ -214,5 +211,5 @@ For questions or suggestions, please open an issue in the repository.
 
 ---
 
-**Version:** 2.0.0  
+**Version:** 3.0.0  
 **Last Updated:** March 2026
